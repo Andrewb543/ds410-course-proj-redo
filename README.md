@@ -9,18 +9,18 @@ look at the jupyter notebook in the playground folder for my work in extracting 
 also request at least 16 GB of ram on ROAR when you're trying to run the notebook
 
 ## REPO STRUCTURE
-```
+```markdown
 ds410-course-proj-redo
-|-- data: this is where downloaded data is stored. right now it is just the paths files for the WARC, WAT, and WET files on Common Crawl
-    |-- warc.paths: this file is where the paths to the WARC files on the Common Crawl servers reside
-    |-- wat.paths: same as warc.paths but for wat files
-    |-- wet.paths: same as warc.paths and wac.paths but for wet files
-|-- dataproc: this is where the data processing utils I've made are stored
-    |-- dataproctools.py: this is where the utility functions for downloading and processing the WET files reside. also includes helper functions to save and load processed WET file RDDs 
-|-- examples: example notebooks to understand the code are stored here
-    |-- data_proc_example.ipynb: this is an example of using dataproc functions to download the WET files and process them into a usable string RDD. more will be added to this
-|-- sparktools: this is where anything that handles pyspark is stored. it's mostly just lightweight wrappers that make initialization easier
-    |-- sparkhandler.py: this just contains a wrapper class spark sessions. gets you a spark context and a spark session, and handles initializing allocated memory and cpu cores in a simple manner
-|-- get_data.sh: this downloads the path files from Common Crawl servers. this script will need to be modified in order to do analysis of multiple months
-|-- README.md: this file
+├── data
+│   ├── warc.paths        : Paths to Common Crawl WARC files
+│   ├── wat.paths         : Paths to Common Crawl WAT files
+│   └── wet.paths         : Paths to Common Crawl WET files
+├── dataproc
+│   └── dataproctools.py  : Utilities for downloading/processing WET files into RDDs
+├── examples
+│   └── data_proc_example.ipynb : Demo of using dataproc functions on WET files
+├── sparktools
+│   └── sparkhandler.py   : Lightweight wrapper for initializing Spark memory/CPU
+├── get_data.sh           : Shell script to download path files from Common Crawl
+└── README.md             : Project documentation
 ```
