@@ -64,3 +64,50 @@ def save_rdd(rdd, path_to_save, overwrite=False):
 
 def load_rdd(spark_context, path_to_load):
     return spark_context.pickleFile(path_to_load)
+
+def extracted_wet_to_df(spark_session, extracted_wet_rdd):
+    ss = spark_session
+    def split_sites(string):
+        import re
+        # The header of every item is WARC/1.0\r\nWARC-Type: conversion, but we assume that the WARC version could be different
+        return re.split(r"WARC/\d.\d\r\nWARC-Type: conversion\r\n", string)[1:]
+
+    split_rdd = extracted_wet_rdd.flatMap(split_sites)
+
+    def regex_split_to_kv(string):
+        import re
+        return re.split(r"Content-Length: \d+\r\n", string)
+    KV_mapped = split_rdd.map(lambda x: tuple(regex_split_to_kv(x)))
+
+    Ksplit = KV_mapped.map(lambda x: (x[0].split('\r\n'), x[1]))
+
+    def get_warc_target_uri(split_key):
+        return split_key[0].split(': ')[1]
+
+    def get_warc_target_date(split_key):
+        return split_key[1].split(': ')[1]
+
+    def get_warc_record_id(split_key):
+        return split_key[2].split(': ')[1]
+
+    def get_warc_languages(split_key):
+        return split_key[5].split(': ')[1].split(',')
+
+    def get_tld_from_url(url):
+        import re
+        # search for strings that start with "." and are followed by a "/" that are at least 2 letters long and also search for also that russian tld approximation that makes no sense
+        searched = re.search(string=url, pattern=r"\.((?:xn--[a-z0-9]+)|[a-z]{2,})(?=[/?#:]|$)")
+        return searched[0] if searched is not None else "None"
+
+    with_processed_keys = Ksplit.map(lambda x:
+                                     (
+                                         get_warc_record_id(x[0]),
+                                         get_warc_target_uri(x[0]),
+                                         get_warc_target_date(x[0]),
+                                         get_warc_languages(x[0]),
+                                         x[1]
+                                     )
+                                     )
+
+    tlds_added = with_processed_keys.map(lambda x: (x[0], x[1], x[2], x[3], get_tld_from_url(x[1]), x[4]))
+    return ss.createDataFrame(tlds_added, schema=['warc_id', 'target_uri', 'date', 'languages', 'tld', 'raw_content'])
